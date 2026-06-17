@@ -2,7 +2,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Inventory & Procurement Foundation** - Establish the master catalog and inbound supply chain foundation.
+- [x] **Phase 1: Inventory & Procurement Foundation** - Establish the master catalog and inbound supply chain foundation.
 - [ ] **Phase 2: Order Management & Fulfillment** - Enable customers and staff to place and manage orders with inventory validation.
 - [ ] **Phase 3: Fleet Management & Delivery** - Orchestrate last-mile delivery with vehicle assignment and mobile driver interface.
 - [ ] **Phase 4: Analytics & Smart Replenishment** - Provide actionable dashboards and automated procurement planning.
@@ -18,7 +18,8 @@
   2. Procurement officers can create Purchase Orders and receive inventory from suppliers.
   3. Inventory movements are tracked using FIFO (First-In, First-Out) batch logic.
   4. User can view a complete history of stock adjustments and inbound receipts.
-**Plans**: TBD
+**Plans**: 1 plan
+- [x] 01-01-PLAN.md — Inventory & Procurement Foundation
 **UI hint**: yes
 
 ### Phase 2: Order Management & Fulfillment
@@ -30,7 +31,12 @@
   2. Staff can enter orders on behalf of customers and validate them against stock levels.
   3. Order lifecycle is tracked from pending to packing slip generation.
   4. System triggers low-stock alerts when safety stock thresholds are breached.
-**Plans**: TBD
+**Plans**: 5 plans
+- [ ] 02-01-PLAN.md — Core Entities Foundation
+- [ ] 02-02-PLAN.md — Inventory & Order Services (FIFO)
+- [ ] 02-03-PLAN.md — Customer Experience & Catalog
+- [ ] 02-04-PLAN.md — Operations & Fulfillment
+- [ ] 02-05-PLAN.md — Monitoring, Alerts & Verification
 **UI hint**: yes
 
 ### Phase 3: Fleet Management & Delivery
@@ -61,7 +67,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Inventory & Procurement Foundation | 0/1 | Not started | - |
-| 2. Order Management & Fulfillment | 0/1 | Not started | - |
-| 3. Fleet Management & Delivery | 0/1 | Not started | - |
-| 4. Analytics & Smart Replenishment | 0/1 | Not started | - |
+| 1. Inventory & Procurement Foundation | 1/1 | Completed | 2026-06-13 |
+| 2. Order Management & Fulfillment | 0/5 | In Progress | - |
+| 3. Fleet Management & Delivery | 0/0 | Not started | - |
+| 4. Analytics & Smart Replenishment | 0/0 | Not started | - |
