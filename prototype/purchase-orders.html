@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management System - Purchase Orders</title>
+    <style>
+        /* * Base Reset & Typography */
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            
+            /* General Status Colors */
+            --success-bg: #d1fae5;
+            --success-text: #065f46;
+            --warning-bg: #fef3c7;
+            --warning-text: #92400e;
+            --danger-bg: #fee2e2;
+            --danger-text: #991b1b;
+            
+            --sidebar-width: 260px;
+            --header-height: 70px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* * Layout Structure (Inherited) */
+        .app-container { display: flex; width: 100%; }
+        
+        .sidebar {
+            width: var(--sidebar-width); background-color: var(--card-bg);
+            border-right: 1px solid var(--border-color); position: fixed;
+            height: 100vh; display: flex; flex-direction: column; z-index: 100;
+        }
+
+        .sidebar-header {
+            height: var(--header-height); display: flex; align-items: center;
+            padding: 0 1.5rem; border-bottom: 1px solid var(--border-color);
+            color: var(--primary-color); font-weight: 700; font-size: 1.25rem; gap: 0.75rem;
+        }
+
+        .sidebar-nav { padding: 1.5rem 1rem; flex-grow: 1; }
+
+        .nav-item {
+            display: flex; align-items: center; padding: 0.875rem 1rem;
+            color: var(--text-muted); text-decoration: none; border-radius: 8px;
+            margin-bottom: 0.5rem; font-weight: 500; transition: all 0.2s ease; gap: 0.75rem;
+        }
+
+        .nav-item:hover { background-color: #f9fafb; color: var(--text-main); }
+        .nav-item.active { background-color: var(--primary-light); color: var(--primary-color); }
+        .nav-item svg { width: 20px; height: 20px; }
+
+        .main-wrapper {
+            flex: 1; margin-left: var(--sidebar-width); display: flex;
+            flex-direction: column; min-height: 100vh;
+        }
+
+        .top-navbar {
+            height: var(--header-height); background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color); display: flex;
+            align-items: center; justify-content: flex-end; padding: 0 2rem;
+            position: sticky; top: 0; z-index: 90;
+        }
+
+        .user-profile { display: flex; align-items: center; gap: 1rem; }
+        .notification-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; position: relative; }
+        .notification-badge {
+            position: absolute; top: -2px; right: -2px; background-color: #ef4444;
+            width: 8px; height: 8px; border-radius: 50%;
+        }
+        .avatar {
+            width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary-color);
+            color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;
+        }
+
+        /* * Page Specific Styles */
+        .content-area { padding: 2rem; flex: 1; display: flex; flex-direction: column; }
+
+        .page-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+        }
+
+        .page-title { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            padding: 0.625rem 1.25rem; font-size: 0.875rem; font-weight: 500;
+            border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s ease;
+        }
+
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+
+        /* Table Container & Toolbar */
+        .table-panel {
+            background-color: var(--card-bg); border-radius: 12px;
+            border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; flex: 1;
+        }
+
+        .table-toolbar {
+            padding: 1.25rem 1.5rem; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 1rem;
+        }
+
+        .search-bar {
+            display: flex; align-items: center; background-color: var(--bg-color);
+            border-radius: 8px; padding: 0.5rem 1rem; width: 320px; border: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .search-bar:focus-within { border-color: var(--primary-color); background-color: #fff; }
+        .search-bar input { border: none; background: transparent; margin-left: 0.5rem; outline: none; width: 100%; color: var(--text-main); }
+
+        .toolbar-actions { display: flex; gap: 0.75rem; }
+        .btn-outline { background-color: #fff; border: 1px solid var(--border-color); color: var(--text-main); }
+        .btn-outline:hover { background-color: var(--bg-color); }
+
+        /* Table Design */
+        .table-responsive { overflow-x: auto; width: 100%; }
+        
+        table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+
+        th {
+            text-align: left; padding: 1rem 1.5rem; color: var(--text-muted);
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color); background-color: #f9fafb;
+        }
+
+        td {
+            padding: 1rem 1.5rem; font-size: 0.875rem; border-bottom: 1px solid var(--border-color); color: var(--text-main);
+        }
+
+        tr:hover td { background-color: #f9fafb; }
+        tr:last-child td { border-bottom: none; }
+
+        .po-number { font-weight: 600; color: var(--primary-color); text-decoration: none; }
+        .po-number:hover { text-decoration: underline; }
+        .po-amount { font-weight: 600; }
+        .supplier-name { font-weight: 500; }
+
+        /* PO Specific Badges */
+        .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.375rem; }
+        .badge::before { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; }
+        
+        .badge-draft { background-color: #f3f4f6; color: #374151; }
+        .badge-draft::before { background-color: #6b7280; }
+        
+        .badge-pending { background-color: var(--warning-bg); color: var(--warning-text); }
+        .badge-pending::before { background-color: #d97706; }
+        
+        .badge-approved { background-color: var(--primary-light); color: var(--primary-hover); }
+        .badge-approved::before { background-color: var(--primary-color); }
+        
+        .badge-received { background-color: var(--success-bg); color: var(--success-text); }
+        .badge-received::before { background-color: #059669; }
+
+        /* Action Buttons */
+        .action-btns { display: flex; gap: 0.5rem; }
+        .btn-icon {
+            background: none; border: none; padding: 0.375rem; border-radius: 6px;
+            cursor: pointer; color: var(--text-muted); transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-icon:hover { background-color: var(--bg-color); color: var(--text-main); }
+        .btn-view:hover { color: var(--primary-color); background-color: var(--primary-light); }
+
+        /* Pagination */
+        .pagination-container {
+            padding: 1rem 1.5rem; border-top: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+        }
+
+        .pagination-info { font-size: 0.875rem; color: var(--text-muted); }
+        
+        .pagination { display: flex; gap: 0.25rem; }
+        .page-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 32px; height: 32px; padding: 0 0.5rem; border: 1px solid var(--border-color);
+            background-color: #fff; color: var(--text-main); font-size: 0.875rem;
+            border-radius: 6px; cursor: pointer; transition: all 0.2s; font-weight: 500; text-decoration: none;
+        }
+        .page-btn:hover { background-color: var(--bg-color); }
+        .page-btn.active { background-color: var(--primary-color); color: #fff; border-color: var(--primary-color); }
+        .page-btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+        /* * Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-wrapper { margin-left: 0; }
+            .top-navbar { padding: 0 1rem; justify-content: space-between; }
+            .table-toolbar { flex-direction: column; align-items: flex-start; }
+            .search-bar { width: 100%; }
+            .pagination-container { flex-direction: column; align-items: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+                InventoryPro
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Dashboard
+                </a>
+                <a href="products.html" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    Products
+                </a>
+                <a href="inventory.html" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 12 12 17 22 12"></polyline><polyline points="2 17 12 22 22 17"></polyline></svg>
+                    Inventory
+                </a>
+                <a href="suppliers.html" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    Suppliers
+                </a>
+                <!-- Active Tab for Purchase Orders -->
+                <a href="#" class="nav-item active">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    Purchase Orders
+                </a>
+                <a href="#" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    Reports
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-wrapper">
+            
+            <!-- Top Navigation -->
+            <header class="top-navbar">
+                <div class="user-profile">
+                    <button class="notification-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <span class="notification-badge"></span>
+                    </button>
+                    <div class="avatar">AD</div>
+                </div>
+            </header>
+
+            <!-- Purchase Orders Content Area -->
+            <div class="content-area">
+                
+                <div class="page-header">
+                    <h1 class="page-title">Purchase Orders</h1>
+                    <!-- Create PO Button -->
+                    <button class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                        Create Purchase Order
+                    </button>
+                </div>
+
+                <div class="table-panel">
+                    
+                    <!-- Table Toolbar with Search -->
+                    <div class="table-toolbar">
+                        <div class="search-bar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input type="text" placeholder="Search by PO number or supplier...">
+                        </div>
+                        <div class="toolbar-actions">
+                            <button class="btn btn-outline">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                                Filter
+                            </button>
+                            <button class="btn btn-outline">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                Export
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- PO Table -->
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>PO Number</th>
+                                    <th>Date Created</th>
+                                    <th>Supplier</th>
+                                    <th>Total Amount</th>
+                                    <th>Expected Delivery</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Row 1 - Pending -->
+                                <tr>
+                                    <td><a href="#" class="po-number">#PO-1042</a></td>
+                                    <td>Jun 18, 2026</td>
+                                    <td><span class="supplier-name">TechSource Electronics</span></td>
+                                    <td class="po-amount">$12,450.00</td>
+                                    <td>Jun 25, 2026</td>
+                                    <td><span class="badge badge-pending">Pending</span></td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="btn-icon btn-view" title="View Document">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            </button>
+                                            <button class="btn-icon" title="Edit">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Row 2 - Received -->
+                                <tr>
+                                    <td><a href="#" class="po-number">#PO-1041</a></td>
+                                    <td>Jun 15, 2026</td>
+                                    <td><span class="supplier-name">OfficeSupplies Co.</span></td>
+                                    <td class="po-amount">$450.00</td>
+                                    <td>Jun 17, 2026</td>
+                                    <td><span class="badge badge-received">Received</span></td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="btn-icon btn-view" title="View Document">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Row 3 - Approved -->
+                                <tr>
+                                    <td><a href="#" class="po-number">#PO-1040</a></td>
+                                    <td>Jun 14, 2026</td>
+                                    <td><span class="supplier-name">AudioTech Solutions</span></td>
+                                    <td class="po-amount">$5,200.00</td>
+                                    <td>Jun 22, 2026</td>
+                                    <td><span class="badge badge-approved">Approved</span></td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="btn-icon btn-view" title="View Document">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            </button>
+                                            <button class="btn-icon" title="Download PDF">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                 <!-- Row 4 - Draft -->
+                                 <tr>
+                                    <td><a href="#" class="po-number">#PO-1039</a></td>
+                                    <td>Jun 12, 2026</td>
+                                    <td><span class="supplier-name">Global Peripherals Ltd.</span></td>
+                                    <td class="po-amount">$1,800.00</td>
+                                    <td>TBD</td>
+                                    <td><span class="badge badge-draft">Draft</span></td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="btn-icon btn-view" title="View Document">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            </button>
+                                            <button class="btn-icon" title="Edit">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Row 5 - Received -->
+                                <tr>
+                                    <td><a href="#" class="po-number">#PO-1038</a></td>
+                                    <td>Jun 05, 2026</td>
+                                    <td><span class="supplier-name">TechSource Electronics</span></td>
+                                    <td class="po-amount">$8,900.50</td>
+                                    <td>Jun 10, 2026</td>
+                                    <td><span class="badge badge-received">Received</span></td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="btn-icon btn-view" title="View Document">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-container">
+                        <span class="pagination-info">Showing 1 to 5 of 12 entries</span>
+                        <div class="pagination">
+                            <a href="#" class="page-btn disabled">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            </a>
+                            <a href="#" class="page-btn active">1</a>
+                            <a href="#" class="page-btn">2</a>
+                            <a href="#" class="page-btn">3</a>
+                            <a href="#" class="page-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>
